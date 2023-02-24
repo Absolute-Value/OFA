@@ -7,13 +7,14 @@ export MASTER_PORT=8087
 user_dir=../../ofa_module
 bpe_dir=../../utils/BPE
 
-data=../../dataset/imagenet_1k_data/imagenet_1k_val.tsv
-ans2label_file=../../dataset/imagenet_1k_data/class2label_new.pkl
+data_dir=/user/data/imagenet_1k_data
+data=${data_dir}/imagenet_1k_val.tsv
+ans2label_file=${data_dir}/class2label_new.pkl
 path=../../checkpoints/imagenet_1k_large_best.pt
-result_path=../../results/imagenet_1k_val
+result_path=./imagenet_1k_val
 selected_cols=0,2
 
-CUDA_VISIBLE_DEVICES=0,1,2,3 python3 -m torch.distributed.launch --nproc_per_node=4 --master_port=${MASTER_PORT} ../../evaluate.py \
+CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 --master_port=${MASTER_PORT} ../../evaluate.py \
     ${data} \
     --path=${path} \
     --user-dir=${user_dir} \

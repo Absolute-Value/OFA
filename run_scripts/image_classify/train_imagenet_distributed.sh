@@ -26,8 +26,8 @@ ans2label_file=${data_dir}/class2label_new.pkl
 restore_file=../../checkpoints/ofa_large.pt
 selected_cols=0,2
 
-log_dir=./imagenet_1k_logs/A6000-01
-save_dir=./imagenet_1k_checkpoints/A6000-01
+log_dir=./imagenet_1k_logs/A100-80GBx4-01
+save_dir=./imagenet_1k_checkpoints/A100-80GBx4-01
 mkdir -p $log_dir $save_dir
 
 bpe_dir=../../utils/BPE
@@ -37,7 +37,7 @@ task=image_classify
 arch=ofa_large
 criterion=adjust_label_smoothed_cross_entropy
 label_smoothing=0.1
-batch_size=8
+batch_size=16
 update_freq=4
 resnet_drop_path_rate=0.0
 encoder_drop_path_rate=0.1
@@ -97,7 +97,7 @@ for total_num_updates in {160000,}; do
             --lr=${lr} \
             --total-num-update=${total_num_updates} \
             --warmup-updates=${warmup_updates} \
-            --log-format=tqdm \
+            --log-format=simple \
             --log-interval=10 \
             --fixed-validation-seed=7 \
             --keep-last-epochs=15 \
@@ -121,7 +121,7 @@ for total_num_updates in {160000,}; do
             --fp16 \
             --fp16-scale-window=512 \
             --imagenet-default-mean-and-std \
-            --num-workers=0 #> ${log_file} 2>&1
+            --num-workers=0 > ${log_file} 2>&1
       done
     done
   done
