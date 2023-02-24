@@ -8,6 +8,14 @@ import logging
 import os
 import sys
 
+logging.basicConfig(
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+    stream=sys.stdout,
+)
+logger = logging.getLogger("ofa.evaluate")
+
 import numpy as np
 import torch
 from fairseq import distributed_utils, options, tasks, utils
@@ -20,15 +28,6 @@ from utils import checkpoint_utils
 from utils.eval_utils import eval_step, merge_results
 from utils.zero_shot_utils import zero_shot_step
 
-logging.basicConfig(
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
-    stream=sys.stdout,
-)
-logger = logging.getLogger("ofa.evaluate")
-
-
 def apply_half(t):
     if t.dtype is torch.float32:
         return t.to(dtype=torch.half)
@@ -38,7 +37,9 @@ def apply_half(t):
 def main(cfg: DictConfig, **kwargs):
     utils.import_user_module(cfg.common)
 
-    reset_logging()
+    # reset_logging()
+    handler = logging.FileHandler(filename=cfg.common.log_file)
+    logger.addHandler(handler)
     logger.info(cfg)
 
     assert (
@@ -149,6 +150,7 @@ def cli_main():
     parser.add_argument("--ema-eval", action='store_true', help="Use EMA weights to make evaluation.")
     parser.add_argument("--beam-search-vqa-eval", action='store_true', help="Use beam search for vqa evaluation (faster inference speed but sub-optimal result), if not specified, we compute scores for each answer in the candidate set, which is slower but can obtain best result.")
     parser.add_argument("--zero-shot", action='store_true')
+    parser.add_argument("--log_file")
     args = options.parse_args_and_arch(parser)
     cfg = convert_namespace_to_omegaconf(args)
     distributed_utils.call_main(
