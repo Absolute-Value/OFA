@@ -6,3 +6,4 @@ checkpoints/
 imagenet_1k_logs/
 imagenet_1k_checkpoints/
 imagenet_1k_val/
+test_imgs/
