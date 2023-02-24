@@ -2,3 +2,6 @@
 .DS_Store
 .vscode
 __pycache__/
+checkpoints/
+imagenet_1k_logs/
+imagenet_1k_checkpoints/
