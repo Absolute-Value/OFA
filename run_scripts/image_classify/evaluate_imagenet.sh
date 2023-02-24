@@ -14,6 +14,9 @@ path=../../checkpoints/imagenet_1k_large_best.pt
 result_path=./imagenet_1k_val
 selected_cols=0,2
 
+mkdir -p ${result_path}
+log_file=${result_path}/val.log
+
 CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 --master_port=${MASTER_PORT} ../../evaluate.py \
     ${data} \
     --path=${path} \
@@ -25,5 +28,5 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node
     --gen-subset=val \
     --results-path=${result_path} \
     --fp16 \
-    --num-workers=0 \
+    --num-workers=0 > ${log_file} 2>&1 \
     --model-overrides="{\"data\":\"${data}\",\"bpe_dir\":\"${bpe_dir}\",\"selected_cols\":\"${selected_cols}\",\"ans2label_file\":\"${ans2label_file}\"}"
