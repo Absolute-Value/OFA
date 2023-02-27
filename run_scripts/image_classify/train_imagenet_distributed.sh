@@ -101,7 +101,7 @@ for total_num_updates in {160000,}; do
             --log-interval=100 \
             --fixed-validation-seed=7 \
             --keep-last-epochs=15 \
-            --save-interval=1 --validate-interval=1 \
+            --save-interval=5 --validate-interval=1 \
             --max-update=${total_num_updates} \
             --best-checkpoint-metric=score --maximize-best-checkpoint-metric \
             --max-src-length=${max_src_length} \
