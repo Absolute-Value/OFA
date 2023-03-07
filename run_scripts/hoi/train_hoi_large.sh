@@ -3,7 +3,6 @@
 # The port for communication. Note that if you want to run multiple tasks on the same machine,
 # you need to specify different port numbers.
 export MASTER_PORT=1051
-export CUDA_VISIBLE_DEVICES=0,1,2,3
 export GPUS_PER_NODE=4
 
 data_dir=/user/data/hico-det
@@ -91,7 +90,7 @@ for max_epoch in {10,}; do
         --num-bins=${num_bins} \
         --patch-image-size=${patch_image_size} \
         --fp16 \
-        --fp16-scale-window=128 \
+        --fp16-scale-window=512 \
         --num-workers=0> ${log_file} 2>&1
     done
   done

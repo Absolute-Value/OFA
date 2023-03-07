@@ -9,3 +9,4 @@ imagenet_1k_val/
 test_imgs/
 hoi_logs/
 hoi_checkpoints/
+core

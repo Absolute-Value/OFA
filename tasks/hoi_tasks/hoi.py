@@ -9,6 +9,7 @@ import logging
 import os
 import math
 from typing import Optional
+from argparse import Namespace
 from fairseq.tasks import register_task
 from fairseq.data import FairseqDataset, iterators
 
@@ -40,8 +41,16 @@ class HoiConfig(OFAConfig):
         default=None,
         metadata={"help": "path to cached cPickle file used to calculate CIDEr scores"},
     )
-
-
+    
+    scst: bool = field(
+        default=False, metadata={"help": "Self-critical sequence training"}
+    )
+    scst_args: str = field(
+        default='{}',
+        metadata={
+            "help": 'generation args for Self-critical sequence training, as JSON string'
+        },
+    )
 
 @register_task("hoi_task", dataclass=HoiConfig)
 class HoiTask(OFATask):
@@ -66,4 +75,16 @@ class HoiTask(OFATask):
             patch_image_size=self.cfg.patch_image_size,
             imagenet_default_mean_and_std=self.cfg.imagenet_default_mean_and_std,
         )
-   
+        
+    def build_model(self, cfg):
+        model = super().build_model(cfg)
+        
+        return model
+    
+    def build_generator(
+        self, models, args, seq_gen_cls=None, extra_gen_cls_kwargs=None, prefix_allowed_tokens_fn=None,
+    ):
+        seq_generator = super().build_generator(models, args, seq_gen_cls, extra_gen_cls_kwargs, prefix_allowed_tokens_fn)
+        seq_generator.constraint_trie = self.constraint_trie
+
+        return seq_generator

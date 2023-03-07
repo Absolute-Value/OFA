@@ -164,8 +164,10 @@ class HoiDataset(OFADataset):
             "source": src_item,
             "patch_image": patch_image,
             "patch_mask": patch_mask,
+            "code_mask": code_mask,
             "target": target_item,
             "prev_output_tokens": prev_output_item,
+            "conf": conf,
         }
         return example
 
