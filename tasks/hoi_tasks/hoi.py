@@ -22,40 +22,35 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class HoiConfig(OFAConfig):
-    eval_bleu: bool = field(
-        default=False, metadata={"help": "evaluation with BLEU scores"}
+    max_image_size: int = field(
+        default=512, metadata={"help": ""}
     )
-    eval_cider: bool = field(
-        default=False, metadata={"help": "evaluation with CIDEr scores"}
-    )
-    eval_args: Optional[str] = field(
-        default='{}',
-        metadata={
-            "help": 'generation args for BLUE or CIDEr scoring, e.g., \'{"beam": 4, "lenpen": 0.6}\', as JSON string'
-        },
-    )
-    eval_print_samples: bool = field(
-        default=False, metadata={"help": "print sample generations during validation"}
-    )
-    eval_cider_cached_tokens: Optional[str] = field(
+    neg_sample_dir: Optional[str] = field(
         default=None,
-        metadata={"help": "path to cached cPickle file used to calculate CIDEr scores"},
-    )
-    
-    scst: bool = field(
-        default=False, metadata={"help": "Self-critical sequence training"}
-    )
-    scst_args: str = field(
-        default='{}',
-        metadata={
-            "help": 'generation args for Self-critical sequence training, as JSON string'
-        },
+        metadata={"help": "negative sample directory, which contains captions (taken from all image-text pairs), "
+                          "answers (taken from VQA), "
+                          "objects (taken form OpenImages) "},
     )
 
 @register_task("hoi_task", dataclass=HoiConfig)
 class HoiTask(OFATask):
     def __init__(self, cfg: HoiConfig, src_dict, tgt_dict):
         super().__init__(cfg, src_dict, tgt_dict)
+        
+        self.type2ans_dict = json.load(open(os.path.join(self.cfg.neg_sample_dir, 'type2ans.json')))
+        self.ans2type_dict = {}
+        for type, answer_list in self.type2ans_dict.items():
+            if type == 'other':
+                continue
+            for answer in answer_list:
+                self.ans2type_dict[answer] = type
+        
+        self.all_object_list = [
+            row.strip() for row in open(os.path.join(self.cfg.neg_sample_dir, 'object.txt')) if row.strip() != ''
+        ]
+        self.all_caption_list = [
+            row.strip() for row in open(os.path.join(self.cfg.neg_sample_dir, 'all_captions.txt')) if row.strip() != ''
+        ]
         
     def load_dataset(self, split, epoch=1, combine=False, **kwargs):
         paths = self.cfg.data.split(',')
