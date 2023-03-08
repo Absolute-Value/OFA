@@ -20,7 +20,6 @@ export RANK=0
 
 data_dir=/user/data/hico-det
 data=${data_dir}/hico-det_train.tsv,${data_dir}/hico-det_test.tsv
-ans2label_file=
 restore_file=../../checkpoints/ofa_large.pt
 selected_cols=0,1,2
 
@@ -107,7 +106,6 @@ for total_num_updates in {40000,}; do
           --find-unused-parameters \
           --freeze-encoder-embedding \
           --freeze-decoder-embedding \
-          --ans2label-file=${ans2label_file} \
           --valid-batch-size=20 \
           --add-type-embedding \
           --scale-attn \
