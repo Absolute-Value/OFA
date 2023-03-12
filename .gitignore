@@ -10,3 +10,9 @@ test_imgs/
 hoi_logs/
 hoi_checkpoints/
 core
+stage1_logs/
+stage1_checkpoints/
+stage2_logs/
+stage2_checkpoints/
+vqa_logs/
+vqa_checkpoints/

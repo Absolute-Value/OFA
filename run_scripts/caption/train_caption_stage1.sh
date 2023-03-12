@@ -4,14 +4,14 @@
 # you need to specify different port numbers.
 export MASTER_PORT=1051
 
-log_dir=./stage1_logs
-save_dir=./stage1_checkpoints
+log_dir=./stage1_logs/A6000x4-06
+save_dir=./stage1_checkpoints/A6000x4-06
 mkdir -p $log_dir $save_dir
 
 bpe_dir=../../utils/BPE
 user_dir=../../ofa_module
 
-data_dir=../../dataset/caption_data
+data_dir=/user/data/caption_data
 data=${data_dir}/caption_stage1_train.tsv,${data_dir}/caption_val.tsv
 restore_file=../../checkpoints/ofa_large.pt
 selected_cols=0,4,2
@@ -48,7 +48,7 @@ for max_epoch in {2,}; do
       save_path=${save_dir}/${max_epoch}"_"${warmup_ratio}"_"${drop_worst_after}
       mkdir -p $save_path
 
-      CUDA_VISIBLE_DEVICES=0,1,2,3 python3 -m torch.distributed.launch --nproc_per_node=4 --master_port=${MASTER_PORT} ../../train.py \
+      CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 --master_port=${MASTER_PORT} ../../train.py \
           $data \
           --selected-cols=${selected_cols} \
           --bpe-dir=${bpe_dir} \
