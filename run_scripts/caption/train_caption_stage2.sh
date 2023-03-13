@@ -13,7 +13,7 @@ user_dir=../../ofa_module
 
 data_dir=/user/data/caption_data
 data=${data_dir}/caption_stage2_train.tsv,${data_dir}/caption_val.tsv
-restore_file=../../checkpoints/caption_stage1_best.pt
+restore_file=./stage1_checkpoints/checkpoints_best.pt
 selected_cols=1,4,2
 
 task=caption
@@ -24,7 +24,7 @@ lr=1e-5
 max_epoch=5
 warmup_ratio=0.06
 batch_size=8
-update_freq=1
+update_freq=2
 resnet_drop_path_rate=0.0
 encoder_drop_path_rate=0.0
 decoder_drop_path_rate=0.0
@@ -46,7 +46,7 @@ for lr in {1e-5,}; do
     save_path=${save_dir}/${lr}"_"${max_epoch}
     mkdir -p $save_path
 
-    CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 --master_port=${MASTER_PORT} ../../train.py \
+    CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 --master_port=${MASTER_PORT} ../../train.py \
         $data \
         --selected-cols=${selected_cols} \
         --bpe-dir=${bpe_dir} \
