@@ -26,8 +26,8 @@ ans2label_file=/user/data/vqa_data/trainval_ans2label.pkl
 restore_file=../../checkpoints/ofa_large.pt
 selected_cols=0,5,2,3,4
 
-log_dir=./vqa_logs/A100-80GBx4-01
-save_dir=./vqa_checkpoints/A100-80GBx4-01
+log_dir=./vqa_logs/A6000x4-01
+save_dir=./vqa_checkpoints/A6000x4-01
 mkdir -p $log_dir $save_dir
 
 bpe_dir=../../utils/BPE
@@ -37,8 +37,8 @@ task=vqa_gen
 arch=ofa_large
 criterion=adjust_label_smoothed_cross_entropy
 label_smoothing=0.1
-batch_size=16
-update_freq=8
+batch_size=8
+update_freq=16
 resnet_drop_path_rate=0.0
 encoder_drop_path_rate=0.2
 decoder_drop_path_rate=0.2
