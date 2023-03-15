@@ -19,12 +19,12 @@ export MASTER_PORT=8514
 export RANK=0 
 
 data_dir=/user/data/hico-det
-data=${data_dir}/hico-det_train.tsv,${data_dir}/hico-det_test.tsv
+data=${data_dir}/hico-det_train.tsv,${data_dir}/hico-det_val.tsv
 restore_file=../../checkpoints/ofa_large.pt
-selected_cols=0,1,2
+#selected_cols=0,1,2
 
-log_dir=./hoi_logs/A6000x4-06/
-save_dir=./hoi_checkpoints/A6000x4-06/
+log_dir=./hoi_logs/A6000x4-03/
+save_dir=./hoi_checkpoints/A6000x4-03/
 mkdir -p $log_dir $save_dir
 
 bpe_dir=../../utils/BPE
@@ -61,7 +61,6 @@ for total_num_updates in {40000,}; do
 
         python -m torch.distributed.launch --nproc_per_node=${GPUS_PER_NODE} --nnodes=${WORKER_CNT} --node_rank=${RANK} --master_addr=${MASTER_ADDR} --master_port=${MASTER_PORT} ../../train.py \
           ${data} \
-          --selected-cols=${selected_cols} \
           --bpe-dir=${bpe_dir} \
           --user-dir=${user_dir} \
           --restore-file=${restore_file} \
