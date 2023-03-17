@@ -47,7 +47,7 @@ num_bins=1000
 max_hoi_num=24
 echo "max_hoi_num "${max_hoi_num}
 
-for max_epoch in {10,}; do
+for max_epoch in 30 100; do
   echo "max_epoch "${max_epoch}
   for warmup_updates in {1000,}; do
     echo "warmup_updates "${warmup_updates} 
