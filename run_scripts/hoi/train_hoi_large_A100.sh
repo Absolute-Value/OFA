@@ -104,7 +104,6 @@ for total_num_updates in {40000,}; do
           --find-unused-parameters \
           --freeze-encoder-embedding \
           --freeze-decoder-embedding \
-          --valid-batch-size=20 \
           --add-type-embedding \
           --scale-attn \
           --scale-fc \
