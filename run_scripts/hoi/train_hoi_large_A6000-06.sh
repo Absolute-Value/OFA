@@ -98,7 +98,7 @@ for max_epoch in 30 100; do
           --log-interval=40 \
           --fixed-validation-seed=7 \
           --no-epoch-checkpoints --keep-best-checkpoints=1 \
-          --save-interval=1 --validate-interval=1 \
+          --save-interval=5 --validate-interval=1 \
           --max-src-length=${max_src_length} \
           --max-tgt-length=${max_tgt_length} \
           --find-unused-parameters \
