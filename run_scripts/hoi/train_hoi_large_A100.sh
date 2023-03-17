@@ -44,19 +44,20 @@ attention_dropout=0.0
 max_src_length=30
 max_tgt_length=1000
 num_bins=1000
-patch_image_size=480
+max_hoi_num=24
+echo "max_hoi_num "${max_hoi_num}
 
-for total_num_updates in {40000,}; do
-  echo "total_num_updates "${total_num_updates}
+for max_epoch in 30 100; do
+  echo "max_epoch "${max_epoch}
   for warmup_updates in {1000,}; do
     echo "warmup_updates "${warmup_updates} 
     for lr in {5e-5,}; do
       echo "lr "${lr}
-      for patch_image_size in {480,}; do
+      for patch_image_size in {512,}; do
         echo "patch_image_size "${patch_image_size}
 
-        log_file=${log_dir}/${total_num_updates}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_rank"${RANK}".log"
-        save_path=${save_dir}/${total_num_updates}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}
+        log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_rank"${RANK}".log"
+        save_path=${save_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}
         mkdir -p $save_path
 
         python -m torch.distributed.launch --nproc_per_node=${GPUS_PER_NODE} --nnodes=${WORKER_CNT} --node_rank=${RANK} --master_addr=${MASTER_ADDR} --master_port=${MASTER_PORT} ../../train.py \
@@ -91,14 +92,13 @@ for total_num_updates in {40000,}; do
           --clip-norm=1.0 \
           --lr-scheduler=polynomial_decay \
           --lr=${lr} \
-          --total-num-update=${total_num_updates} \
+          --max-epoch=${max_epoch} \
           --warmup-updates=${warmup_updates} \
           --log-format=simple \
-          --log-interval=20 \
+          --log-interval=40 \
           --fixed-validation-seed=7 \
-          --keep-last-epochs=15 \
-          --save-interval=1 --validate-interval=1 \
-          --max-update=${total_num_updates} \
+          --no-epoch-checkpoints --keep-best-checkpoints=1 \
+          --save-interval=5 --validate-interval=1 \
           --max-src-length=${max_src_length} \
           --max-tgt-length=${max_tgt_length} \
           --find-unused-parameters \
@@ -113,6 +113,7 @@ for total_num_updates in {40000,}; do
           --patch-image-size=${patch_image_size} \
           --fp16 \
           --fp16-scale-window=512 \
+          --max-hoi-num=${max_hoi_num} \
           --num-workers=0> ${log_file} 2>&1
       done
     done
