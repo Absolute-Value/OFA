@@ -21,7 +21,7 @@ export RANK=0
 data_dir=/user/data/hico-det
 data=${data_dir}/hico-det_train.tsv,${data_dir}/hico-det_val.tsv
 restore_file=../../checkpoints/ofa_large.pt
-#selected_cols=0,1,2
+selected_cols=0,1,2,3
 
 log_dir=./hoi_logs/A6000x4-03/
 save_dir=./hoi_checkpoints/A6000x4-03/
