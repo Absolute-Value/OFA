@@ -92,6 +92,7 @@ class HoiDataset(OFADataset):
         code_image_size=128,
         max_image_size=512,
         imagenet_default_mean_and_std=False,
+        max_hoi_num=20,
         scst=False
     ):
         super().__init__(split, dataset, bpe, src_dict, tgt_dict)
@@ -100,6 +101,7 @@ class HoiDataset(OFADataset):
         self.num_bins = num_bins
         self.patch_image_size = patch_image_size
         self.code_image_size = code_image_size
+        self.max_hoi_num = max_hoi_num
         self.scst = scst
 
         self.transtab = str.maketrans({key: None for key in string.punctuation})
@@ -148,7 +150,7 @@ class HoiDataset(OFADataset):
 
         quant_boxes = []
         for i, (human_box, obj_box) in enumerate(zip(boxes_target["human_boxes"], boxes_target["obj_boxes"])):
-            if i >= 16:
+            if i >= self.max_hoi_num:
                 break
             quant_boxes.append(self.bpe.encode(' a person'))
             quant_boxes.extend(["<bin_{}>".format(int((pos * (self.num_bins - 1)).round())) for pos in human_box[:4]])

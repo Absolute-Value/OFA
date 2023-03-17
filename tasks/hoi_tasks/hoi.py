@@ -25,7 +25,7 @@ class HoiConfig(OFAConfig):
     max_image_size: int = field(
         default=512, metadata={"help": ""}
     )
-    valid_batch_size: int = field(
+    max_hoi_num: int = field(
         default=20,
         metadata={"help": "valid batch size per step"},
     )
@@ -55,4 +55,5 @@ class HoiTask(OFATask):
             max_tgt_length=self.cfg.max_tgt_length,
             patch_image_size=self.cfg.patch_image_size,
             imagenet_default_mean_and_std=self.cfg.imagenet_default_mean_and_std,
+            max_hoi_num=self.cfg.max_hoi_num
         )
