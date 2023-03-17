@@ -34,15 +34,15 @@ task=hoi_task
 arch=ofa_large
 criterion=adjust_label_smoothed_cross_entropy
 label_smoothing=0.1
-batch_size=8
+batch_size=16
 update_freq=1
 resnet_drop_path_rate=0.0
 encoder_drop_path_rate=0.2
 decoder_drop_path_rate=0.2
 dropout=0.1
 attention_dropout=0.0
-max_src_length=80
-max_tgt_length=30
+max_src_length=30
+max_tgt_length=1000
 num_bins=1000
 patch_image_size=480
 
@@ -94,12 +94,11 @@ for total_num_updates in {40000,}; do
           --total-num-update=${total_num_updates} \
           --warmup-updates=${warmup_updates} \
           --log-format=simple \
-          --log-interval=100 \
+          --log-interval=50 \
           --fixed-validation-seed=7 \
           --keep-last-epochs=15 \
           --save-interval=1 --validate-interval=1 \
           --max-update=${total_num_updates} \
-          --best-checkpoint-metric=score --maximize-best-checkpoint-metric \
           --max-src-length=${max_src_length} \
           --max-tgt-length=${max_tgt_length} \
           --find-unused-parameters \
