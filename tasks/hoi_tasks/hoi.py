@@ -27,7 +27,7 @@ class HoiConfig(OFAConfig):
     )
     max_hoi_num: int = field(
         default=20,
-        metadata={"help": "valid batch size per step"},
+        metadata={"help": "max hoi annotation num"},
     )
 
 @register_task("hoi_task", dataclass=HoiConfig)
