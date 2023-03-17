@@ -94,7 +94,7 @@ for total_num_updates in {40000,}; do
           --total-num-update=${total_num_updates} \
           --warmup-updates=${warmup_updates} \
           --log-format=simple \
-          --log-interval=50 \
+          --log-interval=10 \
           --fixed-validation-seed=7 \
           --keep-last-epochs=15 \
           --save-interval=1 --validate-interval=1 \
@@ -104,7 +104,6 @@ for total_num_updates in {40000,}; do
           --find-unused-parameters \
           --freeze-encoder-embedding \
           --freeze-decoder-embedding \
-          --valid-batch-size=20 \
           --add-type-embedding \
           --scale-attn \
           --scale-fc \
