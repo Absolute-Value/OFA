@@ -39,7 +39,10 @@ class HoiTask(OFATask):
         paths = self.cfg.data.split(',')
         assert len(paths) > 0
 
-        file_path = paths[(epoch - 1) % (len(paths))]
+        if split == 'train':
+            file_path = paths[(epoch - 1) % (len(paths) - 1)]
+        else:
+            file_path = paths[-1]
         dataset = FileDataset(file_path, self.cfg.selected_cols)
 
         self.datasets[split] = HoiDataset(
