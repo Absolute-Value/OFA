@@ -44,7 +44,7 @@ attention_dropout=0.0
 max_src_length=30
 max_tgt_length=1000
 num_bins=1000
-max_hoi_num=24
+max_hoi_num=48
 echo "max_hoi_num "${max_hoi_num}
 
 for max_epoch in 30 100; do
@@ -56,7 +56,7 @@ for max_epoch in 30 100; do
       for patch_image_size in {512,}; do
         echo "patch_image_size "${patch_image_size}
 
-        log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_rank"${RANK}".log"
+        log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_rank"${RANK}"_hoi"${max_hoi_num}".log"
         save_path=${save_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}
         mkdir -p $save_path
 

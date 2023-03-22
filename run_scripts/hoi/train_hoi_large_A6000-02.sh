@@ -23,8 +23,8 @@ data=${data_dir}/hico-det_train.tsv,${data_dir}/hico-det_val.tsv
 restore_file=../../checkpoints/ofa_large.pt
 selected_cols=0,1,2,3
 
-log_dir=./hoi_logs/A100-80GBx4-01/
-save_dir=./hoi_checkpoints/A100-80GBx4-01/
+log_dir=./hoi_logs/A6000x4-02/
+save_dir=./hoi_checkpoints/A6000x4-02/
 mkdir -p $log_dir $save_dir
 
 bpe_dir=../../utils/BPE
@@ -34,7 +34,7 @@ task=hoi_task
 arch=ofa_large
 criterion=adjust_label_smoothed_cross_entropy
 label_smoothing=0.1
-batch_size=32
+batch_size=8
 update_freq=1
 resnet_drop_path_rate=0.0
 encoder_drop_path_rate=0.2
@@ -47,7 +47,7 @@ num_bins=1000
 max_hoi_num=48
 echo "max_hoi_num "${max_hoi_num}
 
-for max_epoch in 30 100; do
+for max_epoch in 30; do
   echo "max_epoch "${max_epoch}
   for warmup_updates in {1000,}; do
     echo "warmup_updates "${warmup_updates} 

@@ -34,7 +34,7 @@ task=hoi_task
 arch=ofa_large
 criterion=adjust_label_smoothed_cross_entropy
 label_smoothing=0.1
-batch_size=16
+batch_size=8
 update_freq=1
 resnet_drop_path_rate=0.0
 encoder_drop_path_rate=0.2
@@ -44,10 +44,10 @@ attention_dropout=0.0
 max_src_length=30
 max_tgt_length=1000
 num_bins=1000
-max_hoi_num=24
+max_hoi_num=36
 echo "max_hoi_num "${max_hoi_num}
 
-for max_epoch in 30 100; do
+for max_epoch in 100; do
   echo "max_epoch "${max_epoch}
   for warmup_updates in {1000,}; do
     echo "warmup_updates "${warmup_updates} 
@@ -56,7 +56,7 @@ for max_epoch in 30 100; do
       for patch_image_size in {512,}; do
         echo "patch_image_size "${patch_image_size}
 
-        log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_rank"${RANK}".log"
+        log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_rank"${RANK}"_hoi"${max_hoi_num}".log"
         save_path=${save_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}
         mkdir -p $save_path
 
