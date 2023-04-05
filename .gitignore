@@ -7,8 +7,8 @@ imagenet_1k_logs/
 imagenet_1k_checkpoints/
 imagenet_1k_val/
 test_imgs/
-hoi_logs/
-hoi_checkpoints/
+hoi_logs*/
+hoi_checkpoints*/
 core
 stage1_logs/
 stage1_checkpoints/
