@@ -150,8 +150,6 @@ class HoiDataset(OFADataset):
             quant_boxes.append(self.bpe.encode(' {}ing'.format(boxes_target["hois"][i].replace('_', ''))))
             quant_boxes.extend(["<bin_{}>".format(int((pos * (self.num_bins - 1)).round())) for pos in obj_box[:4]])
             quant_boxes.append(self.bpe.encode(' a {}.'.format(boxes_target["objs"][i])))
-        print(quant_boxes)
-        exit()
         src_item = self.encode_text(' what are the interactions in the image?')
         tgt_item = self.encode_text(' '.join(quant_boxes), use_bpe=False)
 
