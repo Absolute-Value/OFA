@@ -241,6 +241,14 @@ class Normalize(object):
             boxes = target["boxes"]
             boxes = boxes / self.max_image_size
             target["boxes"] = boxes
+        if "human_boxes" in target:
+            boxes = target["human_boxes"]
+            boxes = boxes / self.max_image_size
+            target["human_boxes"] = boxes
+        if "obj_boxes" in target:
+            boxes = target["obj_boxes"]
+            boxes = boxes / self.max_image_size
+            target["obj_boxes"] = boxes
         if "polygons" in target:
             polygons = target["polygons"]
             scale = torch.cat([torch.tensor([w, h], dtype=torch.float32)

@@ -44,7 +44,7 @@ attention_dropout=0.0
 max_src_length=30
 max_tgt_length=1000
 num_bins=1000
-max_hoi_num=64
+max_hoi_num=48
 echo "max_hoi_num "${max_hoi_num}
 
 for max_epoch in 30 100; do

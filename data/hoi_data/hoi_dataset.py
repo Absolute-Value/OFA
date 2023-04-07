@@ -87,10 +87,10 @@ class HoiDataset(OFADataset):
         tgt_dict=None,
         max_src_length=128,
         max_tgt_length=30,
-        num_bins=1000,
+        num_bins=2000,
         patch_image_size=224,
         code_image_size=128,
-        max_image_size=512,
+        max_image_size=2048,
         imagenet_default_mean_and_std=False,
         max_hoi_num=20,
         scst=False
@@ -106,18 +106,11 @@ class HoiDataset(OFADataset):
 
         self.transtab = str.maketrans({key: None for key in string.punctuation})
 
-        if imagenet_default_mean_and_std:
-            mean = IMAGENET_DEFAULT_MEAN
-            std = IMAGENET_DEFAULT_STD
-        else:
-            mean = [0.5, 0.5, 0.5]
-            std = [0.5, 0.5, 0.5]
-
-        self.patch_resize_transform = T.Compose([
+        self.detection_transform = T.Compose([
             T.RandomHorizontalFlip(),
             T.LargeScaleJitter(output_size=self.code_image_size*2, aug_scale_min=1.0, aug_scale_max=1.5),
             T.ToTensor(),
-            T.Normalize(mean=mean, std=std, max_image_size=max_image_size)
+            T.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], max_image_size=max_image_size)
         ])
 
     def __getitem__(self, index):
@@ -143,7 +136,7 @@ class HoiDataset(OFADataset):
         boxes_target["human_area"] = torch.tensor(boxes_target["human_area"])
         boxes_target["obj_area"] = torch.tensor(boxes_target["obj_area"])
 
-        patch_image, boxes_target = self.patch_resize_transform(image, boxes_target)
+        patch_image, boxes_target = self.detection_transform(image, boxes_target)
         patch_mask = torch.tensor([True])
         code_mask = torch.tensor([False])
         conf = torch.tensor([2.0])
@@ -157,7 +150,8 @@ class HoiDataset(OFADataset):
             quant_boxes.append(self.bpe.encode(' {}ing'.format(boxes_target["hois"][i].replace('_', ''))))
             quant_boxes.extend(["<bin_{}>".format(int((pos * (self.num_bins - 1)).round())) for pos in obj_box[:4]])
             quant_boxes.append(self.bpe.encode(' a {}.'.format(boxes_target["objs"][i])))
-            
+        print(quant_boxes)
+        exit()
         src_item = self.encode_text(' what are the interactions in the image?')
         tgt_item = self.encode_text(' '.join(quant_boxes), use_bpe=False)
 

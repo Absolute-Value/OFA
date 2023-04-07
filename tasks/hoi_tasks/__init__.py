@@ -1,1 +1,1 @@
-from .hoi import HoiTask
+from .hoi_task import HoiTask
