@@ -436,7 +436,6 @@ class UnifyDataset(OFADataset):
         boxes_target["boxes"] = torch.tensor(boxes_target["boxes"])
         boxes_target["labels"] = np.array(boxes_target["labels"])
         boxes_target["area"] = torch.tensor(boxes_target["area"])
-
         patch_image, boxes_target = self.detection_transform(image, boxes_target)
         patch_mask = torch.tensor([True])
         code_mask = torch.tensor([False])

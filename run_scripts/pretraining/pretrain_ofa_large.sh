@@ -3,15 +3,15 @@
 # The port for communication. Note that if you want to run multiple tasks on the same machine,
 # you need to specify different port numbers.
 export MASTER_PORT=1051
-export CUDA_VISIBLE_DEVICES=0
-export GPUS_PER_NODE=1
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+export GPUS_PER_NODE=4
 
 bpe_dir=../../utils/BPE
 user_dir=../../ofa_module
 
 restore_file=../../checkpoints/ofa_large.pt
 
-data_dir=../../dataset/pretrain_data
+data_dir=/user/data/pretrain_data_examples
 neg_sample_dir=${data_dir}/negative_sample
 data=${data_dir}/vision_language_examples.tsv
 text_data=${data_dir}/text_examples.tsv
@@ -47,7 +47,7 @@ max_image_size=512
 
 save_path=./checkpoints
 
-python3 -m torch.distributed.launch --nproc_per_node=${GPUS_PER_NODE} --master_port=${MASTER_PORT} ../../train.py \
+python -m torch.distributed.launch --nproc_per_node=${GPUS_PER_NODE} --master_port=${MASTER_PORT} ../../train.py \
   $data \
   --text-data=${text_data} \
   --image-data=${image_data} \
@@ -86,7 +86,7 @@ python3 -m torch.distributed.launch --nproc_per_node=${GPUS_PER_NODE} --master_p
   --log-format=simple --log-interval=10 \
   --fixed-validation-seed=7 \
   --keep-last-epochs=15 \
-  --save-interval=1 \
+  --save-interval=10 \
   --save-interval-updates=6000 \
   --disable-validation \
   --max-src-length=${max_src_length} \
