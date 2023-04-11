@@ -298,7 +298,23 @@ class LargeScaleJitter(object):
             boxes = target["boxes"]
             scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
             target["boxes"] = scaled_boxes
+        if "human_boxes" in target:
+            boxes = target["human_boxes"]
+            scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
+            target["human_boxes"] = scaled_boxes
+        if "obj_boxes" in target:
+            boxes = target["obj_boxes"]
+            scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
+            target["obj_boxes"] = scaled_boxes
 
+        if "human_area" in target:
+            area = target["human_area"]
+            scaled_area = area * (ratio_width * ratio_height)
+            target["human_area"] = scaled_area
+        if "obj_area" in target:
+            area = target["obj_area"]
+            scaled_area = area * (ratio_width * ratio_height)
+            target["obj_area"] = scaled_area
         if "area" in target:
             area = target["area"]
             scaled_area = area * (ratio_width * ratio_height)
@@ -314,11 +330,31 @@ class LargeScaleJitter(object):
 
     def crop_target(self, region, target):
         i, j, h, w = region
-        fields = ["labels", "area"]
+        fields = ["labels", "area", "human_area", "obj_area"]
 
         target = target.copy()
         target["size"] = torch.tensor([h, w])
 
+        if "human_boxes" in target:
+            boxes = target["human_boxes"]
+            max_size = torch.as_tensor([w, h], dtype=torch.float32)
+            cropped_boxes = boxes - torch.as_tensor([j, i, j, i])
+            cropped_boxes = torch.min(cropped_boxes.reshape(-1, 2, 2), max_size)
+            cropped_boxes = cropped_boxes.clamp(min=0)
+            area = (cropped_boxes[:, 1, :] - cropped_boxes[:, 0, :]).prod(dim=1)
+            target["human_boxes"] = cropped_boxes.reshape(-1, 4)
+            target["human_area"] = area
+            fields.append("human_boxes")
+        if "obj_boxes" in target:
+            boxes = target["obj_boxes"]
+            max_size = torch.as_tensor([w, h], dtype=torch.float32)
+            cropped_boxes = boxes - torch.as_tensor([j, i, j, i])
+            cropped_boxes = torch.min(cropped_boxes.reshape(-1, 2, 2), max_size)
+            cropped_boxes = cropped_boxes.clamp(min=0)
+            area = (cropped_boxes[:, 1, :] - cropped_boxes[:, 0, :]).prod(dim=1)
+            target["obj_boxes"] = cropped_boxes.reshape(-1, 4)
+            target["obj_area"] = area
+            fields.append("obj_boxes")
         if "boxes" in target:
             boxes = target["boxes"]
             max_size = torch.as_tensor([w, h], dtype=torch.float32)
@@ -341,6 +377,12 @@ class LargeScaleJitter(object):
             # this is compatible with previous implementation
             if "boxes" in target:
                 cropped_boxes = target['boxes'].reshape(-1, 2, 2)
+                keep = torch.all(cropped_boxes[:, 1, :] > cropped_boxes[:, 0, :], dim=1)
+            elif "human_boxes" in target:
+                cropped_boxes = target['human_boxes'].reshape(-1, 2, 2)
+                keep = torch.all(cropped_boxes[:, 1, :] > cropped_boxes[:, 0, :], dim=1)
+            elif "obj_boxes" in target:
+                cropped_boxes = target['obj_boxes'].reshape(-1, 2, 2)
                 keep = torch.all(cropped_boxes[:, 1, :] > cropped_boxes[:, 0, :], dim=1)
             else:
                 keep = target['masks'].flatten(1).any(1)
