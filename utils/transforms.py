@@ -133,6 +133,16 @@ def resize(image, target, size, max_size=None):
     ratio_width, ratio_height = ratios
 
     target = target.copy()
+    if "human_boxes" in target:
+        boxes = target["human_boxes"]
+        scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
+        target["human_boxes"] = scaled_boxes
+
+    if "obj_boxes" in target:
+        boxes = target["obj_boxes"]
+        scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
+        target["obj_boxes"] = scaled_boxes
+
     if "boxes" in target:
         boxes = target["boxes"]
         scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
@@ -497,6 +507,12 @@ class OriginLargeScaleJitter(object):
             # this is compatible with previous implementation
             if "boxes" in target:
                 cropped_boxes = target['boxes'].reshape(-1, 2, 2)
+                keep = torch.all(cropped_boxes[:, 1, :] > cropped_boxes[:, 0, :], dim=1)
+            elif "human_boxes" in target:
+                cropped_boxes = target['human_boxes'].reshape(-1, 2, 2)
+                keep = torch.all(cropped_boxes[:, 1, :] > cropped_boxes[:, 0, :], dim=1)
+            elif "obj_boxes" in target:
+                cropped_boxes = target['obj_boxes'].reshape(-1, 2, 2)
                 keep = torch.all(cropped_boxes[:, 1, :] > cropped_boxes[:, 0, :], dim=1)
             else:
                 keep = target['masks'].flatten(1).any(1)
