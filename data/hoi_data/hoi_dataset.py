@@ -47,6 +47,10 @@ def collate(samples, pad_idx, eos_idx):
 
     patch_images = torch.stack([sample['patch_image'] for sample in samples], dim=0)
     patch_masks = torch.cat([sample['patch_mask'] for sample in samples])
+    
+    w_resize_ratios = torch.stack([s["w_resize_ratio"] for s in samples], dim=0)
+    h_resize_ratios = torch.stack([s["h_resize_ratio"] for s in samples], dim=0)
+    # region_coords = torch.stack([s['region_coord'] for s in samples], dim=0)
 
     prev_output_tokens = None
     target = None
@@ -72,6 +76,9 @@ def collate(samples, pad_idx, eos_idx):
             "prev_output_tokens": prev_output_tokens
         },
         "target": target,
+        "w_resize_ratios": w_resize_ratios,
+        "h_resize_ratios": h_resize_ratios,
+        # "region_coords": region_coords
     }
 
     return batch
@@ -87,42 +94,43 @@ class HoiDataset(OFADataset):
         tgt_dict=None,
         max_src_length=128,
         max_tgt_length=30,
-        num_bins=2000,
-        patch_image_size=224,
-        code_image_size=128,
-        max_image_size=2048,
+        patch_image_size=512,
         imagenet_default_mean_and_std=False,
-        max_hoi_num=20,
-        scst=False
+        num_bins=1000,
+        max_image_size=512,
+        max_hoi_num=48
     ):
         super().__init__(split, dataset, bpe, src_dict, tgt_dict)
         self.max_src_length = max_src_length
         self.max_tgt_length = max_tgt_length
-        self.num_bins = num_bins
         self.patch_image_size = patch_image_size
-        self.code_image_size = code_image_size
+        self.num_bins = num_bins
         self.max_hoi_num = max_hoi_num
-        self.scst = scst
+        
+        if imagenet_default_mean_and_std:
+            mean = IMAGENET_DEFAULT_MEAN
+            std = IMAGENET_DEFAULT_STD
+        else:
+            mean = [0.5, 0.5, 0.5]
+            std = [0.5, 0.5, 0.5]
 
         self.transtab = str.maketrans({key: None for key in string.punctuation})
 
         self.detection_transform = T.Compose([
-            T.RandomHorizontalFlip(),
-            T.LargeScaleJitter(output_size=self.code_image_size*2, aug_scale_min=1.0, aug_scale_max=1.5),
+            T.RandomResize([patch_image_size], max_size=patch_image_size),
             T.ToTensor(),
-            T.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], max_image_size=max_image_size)
+            T.Normalize(mean=mean, std=std, max_image_size=max_image_size)
         ])
 
     def __getitem__(self, index):
         image_id, image, label = self.dataset[index]
+        
         image = Image.open(BytesIO(base64.urlsafe_b64decode(image))).convert("RGB")
-
         w, h = image.size
         boxes_target = {"human_boxes": [], "obj_boxes": [], "hois": [], "objs": [], "human_area": [], "obj_area": [], "size": torch.tensor([h, w])}
         label_list = label.strip().split('&&')
         for label in label_list:
-            # x0, y0, x1, y1, cat_id, cat = label.strip().split(',', 5)
-            human_x0, human_y0, human_x1, human_y1, hoi_id, hoi, obj_x0, obj_y0, obj_x1, obj_y1, obj_id, obj = label.strip().split(',', 12)
+            human_x0, human_y0, human_x1, human_y1, hoi_id, hoi, obj_x0, obj_y0, obj_x1, obj_y1, obj_id, obj = label.strip().split(',')
             boxes_target["human_boxes"].append([float(human_x0), float(human_y0), float(human_x1), float(human_y1)])
             boxes_target["obj_boxes"].append([float(obj_x0), float(obj_y0), float(obj_x1), float(obj_y1)])
             boxes_target["hois"].append(hoi)
@@ -136,17 +144,16 @@ class HoiDataset(OFADataset):
         boxes_target["human_area"] = torch.tensor(boxes_target["human_area"])
         boxes_target["obj_area"] = torch.tensor(boxes_target["obj_area"])
 
-        patch_image, boxes_target = self.detection_transform(image, boxes_target)
+        patch_image, patch_boxes = self.detection_transform(image, boxes_target)
+        resize_h, resize_w = patch_boxes["size"][0], patch_boxes["size"][1]
         patch_mask = torch.tensor([True])
-        code_mask = torch.tensor([False])
-        conf = torch.tensor([2.0])
 
         quant_boxes = []
-        for i, (human_box, obj_box) in enumerate(zip(boxes_target["human_boxes"], boxes_target["obj_boxes"])):
+        for i, (human_box, obj_box) in enumerate(zip(patch_boxes["human_boxes"], patch_boxes["obj_boxes"])):
             if i >= self.max_hoi_num:
                 break
-            quant_boxes.append(self.bpe.encode(' a person'))
             quant_boxes.extend(["<bin_{}>".format(int((pos * (self.num_bins - 1)).round())) for pos in human_box[:4]])
+            quant_boxes.append(self.bpe.encode(' a person'))
             quant_boxes.append(self.bpe.encode(' {}'.format(boxes_target["hois"][i].replace('_', ' '))))
             quant_boxes.extend(["<bin_{}>".format(int((pos * (self.num_bins - 1)).round())) for pos in obj_box[:4]])
             quant_boxes.append(self.bpe.encode(' a {}.'.format(boxes_target["objs"][i])))
@@ -162,10 +169,10 @@ class HoiDataset(OFADataset):
             "source": src_item,
             "patch_image": patch_image,
             "patch_mask": patch_mask,
-            "code_mask": code_mask,
             "target": target_item,
             "prev_output_tokens": prev_output_item,
-            "conf": conf,
+            "w_resize_ratio": resize_w / w,
+            "h_resize_ratio": resize_h / h,
         }
         return example
 

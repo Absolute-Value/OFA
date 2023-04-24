@@ -19,14 +19,11 @@ logger = logging.getLogger(__name__)
 @dataclass
 class HoiConfig(OFAConfig):
     max_image_size: int = field(
-        default=2048, metadata={"help": ""}
+        default=512, metadata={"help": "max image size for normalization"}
     )
     max_hoi_num: int = field(
-        default=20,
+        default=48,
         metadata={"help": "max hoi annotation num"},
-    )
-    num_bins: int = field(
-        default=2000, metadata={"help": "number of quantization bins"}
     )
 
 @register_task("hoi_task", dataclass=HoiConfig)
@@ -34,31 +31,6 @@ class HoiTask(OFATask):
     def __init__(self, cfg: HoiConfig, src_dict, tgt_dict):
         super().__init__(cfg, src_dict, tgt_dict)
 
-    @classmethod
-    def setup_task(cls, cfg: DictConfig, **kwargs):
-        """Setup the task."""
-
-        # load dictionaries
-        src_dict = cls.load_dictionary(
-            os.path.join(cfg.bpe_dir, "dict.txt")
-        )
-        tgt_dict = cls.load_dictionary(
-            os.path.join(cfg.bpe_dir, "dict.txt")
-        )
-        src_dict.add_symbol("<mask>")
-        tgt_dict.add_symbol("<mask>")
-        for i in range(cfg.code_dict_size):
-            src_dict.add_symbol("<code_{}>".format(i))
-            tgt_dict.add_symbol("<code_{}>".format(i))
-        # quantization
-        for i in range(cfg.num_bins):
-            src_dict.add_symbol("<bin_{}>".format(i))
-            tgt_dict.add_symbol("<bin_{}>".format(i))
-
-        logger.info("source dictionary: {} types".format(len(src_dict)))
-        logger.info("target dictionary: {} types".format(len(tgt_dict)))
-        return cls(cfg, src_dict, tgt_dict)
-        
     def load_dataset(self, split, epoch=1, combine=False, **kwargs):
         paths = self.cfg.data.split(',')
         assert len(paths) > 0
