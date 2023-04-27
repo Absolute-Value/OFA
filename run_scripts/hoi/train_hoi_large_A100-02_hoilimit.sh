@@ -18,8 +18,10 @@ export MASTER_PORT=8514
 # The rank of this worker, should be in {0, ..., WORKER_CNT-1}, for single-worker training, please set to 0
 export RANK=0 
 
+hoi_limit=10
+
 data_dir=/user/data/hico-det
-data=${data_dir}/hico-det_train.tsv,${data_dir}/hico-det_val.tsv
+data=${data_dir}/hico-det_train_limit_${hoi_limit}.tsv,${data_dir}/hico-det_val.tsv
 restore_file=../../checkpoints/ofa_large.pt
 selected_cols=0,1,2,3
 
@@ -56,8 +58,8 @@ for max_epoch in 30 100; do
       for patch_image_size in {512,}; do
         echo "patch_image_size "${patch_image_size}
 
-        log_file=${log_dir}/k-yanase_${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_hoi"${max_hoi_num}"_rank"${RANK}".log"
-        save_path=${save_dir}/k-yanase_${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_hoi"${max_hoi_num}
+        log_file=${log_dir}/k-yanase_${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_hoi"${max_hoi_num}"_rank"${RANK}_hoilimit${hoi_limit}".log"
+        save_path=${save_dir}/k-yanase_${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_hoi"${max_hoi_num}_hoilimit${hoi_limit}
         mkdir -p $save_path
 
         python -m torch.distributed.launch --nproc_per_node=${GPUS_PER_NODE} --nnodes=${WORKER_CNT} --node_rank=${RANK} --master_addr=${MASTER_ADDR} --master_port=${MASTER_PORT} ../../train.py \
