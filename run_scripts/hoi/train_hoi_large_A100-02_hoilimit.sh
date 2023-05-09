@@ -18,7 +18,7 @@ export MASTER_PORT=8514
 # The rank of this worker, should be in {0, ..., WORKER_CNT-1}, for single-worker training, please set to 0
 export RANK=0 
 
-hoi_limit=20
+hoi_limit=40
 
 data_dir=/user/data/hico-det
 data=${data_dir}/hico-det_train_limit_${hoi_limit}.tsv,${data_dir}/hico-det_val.tsv
