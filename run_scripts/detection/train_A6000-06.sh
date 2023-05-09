@@ -113,7 +113,6 @@ for max_epoch in 30 100; do
           --patch-image-size=${patch_image_size} \
           --fp16 \
           --fp16-scale-window=512 \
-          --max-hoi-num=${max_hoi_num} \
           --num-workers=0> ${log_file} 2>&1
       done
     done

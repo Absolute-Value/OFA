@@ -44,8 +44,6 @@ attention_dropout=0.0
 max_src_length=100
 max_tgt_length=30
 num_bins=1000
-max_hoi_num=48
-echo "max_hoi_num "${max_hoi_num}
 
 for max_epoch in 30 100; do
   echo "max_epoch "${max_epoch}
@@ -56,8 +54,8 @@ for max_epoch in 30 100; do
       for patch_image_size in {512,}; do
         echo "patch_image_size "${patch_image_size}
 
-        log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_hoi"${max_hoi_num}"_rank"${RANK}".log"
-        save_path=${save_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_hoi"${max_hoi_num}
+        log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_rank"${RANK}".log"
+        save_path=${save_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}
         mkdir -p $save_path
 
         python -m torch.distributed.launch --nproc_per_node=${GPUS_PER_NODE} --nnodes=${WORKER_CNT} --node_rank=${RANK} --master_addr=${MASTER_ADDR} --master_port=${MASTER_PORT} ../../train.py \
@@ -113,7 +111,6 @@ for max_epoch in 30 100; do
           --patch-image-size=${patch_image_size} \
           --fp16 \
           --fp16-scale-window=512 \
-          --max-hoi-num=${max_hoi_num} \
           --num-workers=0> ${log_file} 2>&1
       done
     done
