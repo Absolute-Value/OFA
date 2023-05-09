@@ -16,3 +16,4 @@ stage2_logs/
 stage2_checkpoints/
 vqa_logs/
 vqa_checkpoints/
+results/
