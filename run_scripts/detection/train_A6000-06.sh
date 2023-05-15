@@ -18,8 +18,8 @@ export MASTER_PORT=8514
 # The rank of this worker, should be in {0, ..., WORKER_CNT-1}, for single-worker training, please set to 0
 export RANK=0 
 
-data_dir=/user/data/hico-det
-data=${data_dir}/hico-det_train.tsv,${data_dir}/hico-det_val.tsv
+data_dir=/user/data/mscoco2014
+data=${data_dir}/coco_train.tsv,${data_dir}/coco_val.tsv
 restore_file=../../checkpoints/ofa_large.pt
 selected_cols=0,1,2,3
 
