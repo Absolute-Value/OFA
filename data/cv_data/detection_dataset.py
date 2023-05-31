@@ -128,7 +128,7 @@ class DetectionDataset(OFADataset):
         boxes_target = {"boxes": [], "labels": [], "area": [], "size": torch.tensor([h, w])}
         label_list = label.strip().split('&&')
         for label in label_list:
-            x0, y0, x1, y1, cat_id, cat = label.strip().split(',', 5)
+            x0, y0, x1, y1, cat_id, cat = label.strip().split(',')
             boxes_target["boxes"].append([float(x0), float(y0), float(x1), float(y1)])
             boxes_target["labels"].append(cat)
             boxes_target["area"].append((float(x1) - float(x0)) * (float(y1) - float(y0)))
@@ -141,7 +141,7 @@ class DetectionDataset(OFADataset):
         patch_mask = torch.tensor([True])
 
         quant_boxes = []
-        for i, box in enumerate(boxes_target["boxes"]):
+        for i, box in enumerate(patch_boxes["boxes"]):
             quant_boxes.extend(["<bin_{}>".format(int((pos * (self.num_bins - 1)).round())) for pos in box[:4]])
             quant_boxes.append(self.bpe.encode(' {}'.format(boxes_target["labels"][i])))
         src_item = self.encode_text(' what are the objects in the image?')

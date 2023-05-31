@@ -133,20 +133,19 @@ def resize(image, target, size, max_size=None):
     ratio_width, ratio_height = ratios
 
     target = target.copy()
-    if "human_boxes" in target:
-        boxes = target["human_boxes"]
-        scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
-        target["human_boxes"] = scaled_boxes
-
-    if "obj_boxes" in target:
-        boxes = target["obj_boxes"]
-        scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
-        target["obj_boxes"] = scaled_boxes
 
     if "boxes" in target:
         boxes = target["boxes"]
         scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
         target["boxes"] = scaled_boxes
+    elif "human_boxes" in target:
+        boxes = target["human_boxes"]
+        scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
+        target["human_boxes"] = scaled_boxes
+    elif "obj_boxes" in target:
+        boxes = target["obj_boxes"]
+        scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
+        target["obj_boxes"] = scaled_boxes
 
     if "polygons" in target:
         polygons = target["polygons"]
@@ -251,11 +250,11 @@ class Normalize(object):
             boxes = target["boxes"]
             boxes = boxes / self.max_image_size
             target["boxes"] = boxes
-        if "human_boxes" in target:
+        elif "human_boxes" in target:
             boxes = target["human_boxes"]
             boxes = boxes / self.max_image_size
             target["human_boxes"] = boxes
-        if "obj_boxes" in target:
+        elif "obj_boxes" in target:
             boxes = target["obj_boxes"]
             boxes = boxes / self.max_image_size
             target["obj_boxes"] = boxes
@@ -308,11 +307,11 @@ class LargeScaleJitter(object):
             boxes = target["boxes"]
             scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
             target["boxes"] = scaled_boxes
-        if "human_boxes" in target:
+        elif "human_boxes" in target:
             boxes = target["human_boxes"]
             scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
             target["human_boxes"] = scaled_boxes
-        if "obj_boxes" in target:
+        elif "obj_boxes" in target:
             boxes = target["obj_boxes"]
             scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
             target["obj_boxes"] = scaled_boxes
@@ -321,11 +320,11 @@ class LargeScaleJitter(object):
             area = target["human_area"]
             scaled_area = area * (ratio_width * ratio_height)
             target["human_area"] = scaled_area
-        if "obj_area" in target:
+        elif "obj_area" in target:
             area = target["obj_area"]
             scaled_area = area * (ratio_width * ratio_height)
             target["obj_area"] = scaled_area
-        if "area" in target:
+        elif "area" in target:
             area = target["area"]
             scaled_area = area * (ratio_width * ratio_height)
             target["area"] = scaled_area
