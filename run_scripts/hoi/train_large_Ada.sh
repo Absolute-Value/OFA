@@ -8,7 +8,7 @@
 # To use the shuffled data (if exists), please uncomment the Line 24.
 
 # Number of GPUs per GPU worker
-GPUS_PER_NODE=4 
+GPUS_PER_NODE=2
 # Number of GPU workers, for single-worker training, please set to 1
 WORKER_CNT=1
 # The ip address of the rank-0 worker, for single-worker training, please set to localhost
@@ -18,24 +18,24 @@ export MASTER_PORT=8514
 # The rank of this worker, should be in {0, ..., WORKER_CNT-1}, for single-worker training, please set to 0
 export RANK=0 
 
-data_dir=/user/data/hico-det
-data=${data_dir}/hico-det_train_wo_no.tsv,${data_dir}/hico-det_val_wo_no.tsv
-restore_file=../../checkpoints/ofa_huge.pt
-selected_cols=0,1,2,3
+data_dir=/local/hico-det
+data=${data_dir}/hico-det_train.tsv,${data_dir}/hico-det_val.tsv
+restore_file=../../checkpoints/ofa_large.pt
+selected_cols=0,1
 
-log_dir=./hoi_logs/huge/A100-80GBx4-01_wo_no/
-save_dir=./hoi_checkpoints/huge/A100-80GBx4-01_wo_no/
+log_dir=./hoi_logs/Ada/
+save_dir=./hoi_checkpoints/Ada/
 mkdir -p $log_dir $save_dir
 
 bpe_dir=../../utils/BPE
 user_dir=../../ofa_module
 
 task=hoi_task
-arch=ofa_huge
+arch=ofa_large
 criterion=adjust_label_smoothed_cross_entropy
 label_smoothing=0.1
-batch_size=4
-update_freq=4
+batch_size=8
+update_freq=2
 resnet_drop_path_rate=0.0
 encoder_drop_path_rate=0.2
 decoder_drop_path_rate=0.2
@@ -47,7 +47,7 @@ num_bins=1000
 max_hoi_num=48
 echo "max_hoi_num "${max_hoi_num}
 
-for max_epoch in 30 100; do
+for max_epoch in 30; do
   echo "max_epoch "${max_epoch}
   for warmup_updates in {1000,}; do
     echo "warmup_updates "${warmup_updates} 

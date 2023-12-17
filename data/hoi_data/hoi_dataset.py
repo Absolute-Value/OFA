@@ -133,7 +133,7 @@ class HoiDataset(OFADataset):
             human_x0, human_y0, human_x1, human_y1, hoi_id, hoi, obj_x0, obj_y0, obj_x1, obj_y1, obj_id, obj = label.strip().split(',')
             boxes_target["human_boxes"].append([float(human_x0), float(human_y0), float(human_x1), float(human_y1)])
             boxes_target["obj_boxes"].append([float(obj_x0), float(obj_y0), float(obj_x1), float(obj_y1)])
-            boxes_target["hois"].append(hoi)
+            boxes_target["hois"].append(hoi_id)
             boxes_target["objs"].append(obj)
             boxes_target["human_area"].append((float(human_x1) - float(human_x0)) * (float(human_y1) - float(human_y0)))
             boxes_target["obj_area"].append((float(obj_x1) - float(obj_x0)) * (float(obj_y1) - float(obj_y0)))
@@ -148,17 +148,17 @@ class HoiDataset(OFADataset):
         resize_h, resize_w = patch_boxes["size"][0], patch_boxes["size"][1]
         patch_mask = torch.tensor([True])
 
-        quant_boxes = []
         for i, (human_box, obj_box) in enumerate(zip(patch_boxes["human_boxes"], patch_boxes["obj_boxes"])):
-            if i >= self.max_hoi_num:
-                break
+            quant_boxes = []
+            quant_boxes.extend(self.bpe.encode('What is the interaction between person'))
             quant_boxes.extend(["<bin_{}>".format(int((pos * (self.num_bins - 1)).round())) for pos in human_box[:4]])
-            quant_boxes.append(self.bpe.encode(' a person'))
-            quant_boxes.append(self.bpe.encode(' {}'.format(boxes_target["hois"][i].replace('_', ' '))))
+            quant_boxes.append(self.bpe.encode(' and {}'.format(boxes_target["objs"][i])))
             quant_boxes.extend(["<bin_{}>".format(int((pos * (self.num_bins - 1)).round())) for pos in obj_box[:4]])
-            quant_boxes.append(self.bpe.encode(' a {}.'.format(boxes_target["objs"][i])))
-        src_item = self.encode_text(' what are the interactions in the image?')
-        tgt_item = self.encode_text(' '.join(quant_boxes), use_bpe=False)
+            quant_boxes.append(self.bpe.encode('?'))
+            tgt_text = boxes_target["hois"][i]
+            break
+        src_item = self.encode_text(' '.join(quant_boxes), use_bpe=False)
+        tgt_item = self.encode_text(tgt_text)
 
         src_item = torch.cat([self.bos_item, src_item, self.eos_item])
         target_item = torch.cat([tgt_item, self.eos_item])
