@@ -31,13 +31,13 @@ warnings.filterwarnings("ignore", "(Possibly )?corrupt EXIF data", UserWarning)
 
 
 def get_whole_word_mask(bpe, dictionary):
-    if bpe is not None:
+    if bpe is not None: # bpeが存在したら
 
-        def is_beginning_of_word(i):
+        def is_beginning_of_word(i): # 単語の先頭かどうかを判定する関数
             if i < dictionary.nspecial:
                 # special elements are always considered beginnings
                 return True
-            tok = dictionary[i]
+            tok = dictionary[i] # 辞書のi番目の単語を取得
             if tok.startswith("madeupword"):
                 return True
             try:
@@ -169,7 +169,7 @@ class UnifyDataset(OFADataset):
         if self.mask_length == "subword" and self.replace_length not in [0, 1]:
             raise ValueError(f"if using subwords, use replace-length=1 or 0")
 
-        self.mask_idx = src_dict.index("<mask>")
+        self.mask_idx = src_dict.index("<mask>") # <mask>トークンのインデックスを取得
         self.mask_whole_word = (
             get_whole_word_mask(self.bpe, self.src_dict)
             if self.mask_length != "subword"
@@ -372,7 +372,7 @@ class UnifyDataset(OFADataset):
             text_item = self.encode_text(" {}".format(text), length=512)
             text_item = text_item[-256:]
             text_item = torch.cat([self.bos_item, text_item, self.eos_item])
-            mask_text_item = self.add_whole_word_mask(text_item.clone(), self.mask_ratio)
+            mask_text_item = self.add_whole_word_mask(text_item.clone(), self.mask_ratio) # マスクを追加
             prefix_item = self.encode_text(' what is the complete text of " "?')
             src_item = torch.cat([prefix_item[:-2], mask_text_item[1:-1], prefix_item[-2:]])
             tgt_item = text_item[1:-1]
@@ -483,6 +483,7 @@ class UnifyDataset(OFADataset):
         is_word_start[-1] = 0
         return is_word_start
 
+    # テキストの単語をマスクする処理を行う関数 (source: [bos, text, eos], p: マスク率)
     def add_whole_word_mask(self, source, p):
         is_word_start = self.word_starts(source)
         num_to_mask = int(math.ceil(is_word_start.float().sum() * p))
@@ -540,7 +541,7 @@ class UnifyDataset(OFADataset):
             to_keep[indices] = 0
         else:
             # keep index, but replace it with [MASK]
-            source[indices] = self.mask_idx
+            source[indices] = self.mask_idx # <mask>トークンのインデックスに置き換える
             source[indices[mask_random]] = torch.randint(
                 4, len(self.tgt_dict) - self.code_dict_size - self.num_bins, size=(mask_random.sum(),)
             )
