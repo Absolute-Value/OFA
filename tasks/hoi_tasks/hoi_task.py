@@ -38,7 +38,8 @@ class HoiTask(OFATask):
             file_path = paths[(epoch - 1) % (len(paths) - 1)]
         else:
             file_path = paths[-1]
-        dataset = FileDataset(file_path, self.cfg.selected_cols)
+        
+        dataset = Dataset(file_path)
 
         self.datasets[split] = HoiDataset(
             split,
@@ -54,3 +55,29 @@ class HoiTask(OFATask):
             max_image_size=self.cfg.max_image_size,
             is_multi_label=self.cfg.is_multi_label,
         )
+
+class Dataset:
+    def __init__(self, file_path):
+        self.root_dir = os.path.dirname(file_path)
+        with open(file_path) as f:
+            lines = f.readlines()
+        self.data = []
+        for line in lines:
+            img_id, img_name, anns = line.rstrip('\n').split("\t")
+            for ann in anns.split("&&"):
+                self.data.append([img_id, img_name, ann])
+                if "hico-det" in file_path:
+                    break
+        self.total_row_count = len(self.data)
+    
+    def __len__(self):
+        return self.total_row_count
+    
+    def __getitem__(self, index):
+        return self.data[index]
+    
+    def get_total_row_count(self):
+        return self.total_row_count
+
+    def _seek(self, offset=0):
+        pass

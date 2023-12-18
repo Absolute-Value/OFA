@@ -4,6 +4,7 @@
 # found in the LICENSE file in the root directory.
 
 from io import BytesIO
+import os
 
 import logging
 import warnings
@@ -123,9 +124,10 @@ class HoiDataset(OFADataset):
         ])
 
     def __getitem__(self, index):
-        image_id, image, label = self.dataset[index]
+        image_id, image_path, label = self.dataset[index]
         
-        image = Image.open(BytesIO(base64.urlsafe_b64decode(image))).convert("RGB")
+        image_path = os.path.join(self.dataset.root_dir, image_path)
+        image = Image.open(image_path).convert("RGB")
         w, h = image.size
         boxes_target = {"human_boxes": [], "obj_boxes": [], "hois": [], "objs": [], "human_area": [], "obj_area": [], "size": torch.tensor([h, w])}
         label_list = label.strip().split('&&')
