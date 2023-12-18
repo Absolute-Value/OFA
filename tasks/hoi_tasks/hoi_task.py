@@ -21,9 +21,8 @@ class HoiConfig(OFAConfig):
     max_image_size: int = field(
         default=512, metadata={"help": "max image size for normalization"}
     )
-    max_hoi_num: int = field(
-        default=48,
-        metadata={"help": "max hoi annotation num"},
+    is_multi_label: bool = field(
+        default=False, metadata={"help": "whether the label is multi-label"}
     )
 
 @register_task("hoi_task", dataclass=HoiConfig)
@@ -53,5 +52,5 @@ class HoiTask(OFATask):
             patch_image_size=self.cfg.patch_image_size,
             imagenet_default_mean_and_std=self.cfg.imagenet_default_mean_and_std,
             max_image_size=self.cfg.max_image_size,
-            max_hoi_num=self.cfg.max_hoi_num
+            is_multi_label=self.cfg.is_multi_label,
         )

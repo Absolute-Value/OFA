@@ -98,14 +98,14 @@ class HoiDataset(OFADataset):
         imagenet_default_mean_and_std=False,
         num_bins=1000,
         max_image_size=512,
-        max_hoi_num=48
+        is_multi_label=False,
     ):
         super().__init__(split, dataset, bpe, src_dict, tgt_dict)
         self.max_src_length = max_src_length
         self.max_tgt_length = max_tgt_length
         self.patch_image_size = patch_image_size
         self.num_bins = num_bins
-        self.max_hoi_num = max_hoi_num
+        self.is_multi_label = is_multi_label
         
         if imagenet_default_mean_and_std:
             mean = IMAGENET_DEFAULT_MEAN
@@ -133,7 +133,10 @@ class HoiDataset(OFADataset):
             human_x0, human_y0, human_x1, human_y1, hoi_id, hoi, obj_x0, obj_y0, obj_x1, obj_y1, obj_id, obj = label.strip().split(',')
             boxes_target["human_boxes"].append([float(human_x0), float(human_y0), float(human_x1), float(human_y1)])
             boxes_target["obj_boxes"].append([float(obj_x0), float(obj_y0), float(obj_x1), float(obj_y1)])
-            boxes_target["hois"].append(hoi_id)
+            if self.is_multi_label:
+                boxes_target["hois"].append(" ".join(hoi_id.split("%")))
+            else:
+                boxes_target["hois"].append(hoi_id)
             boxes_target["objs"].append(obj)
             boxes_target["human_area"].append((float(human_x1) - float(human_x0)) * (float(human_y1) - float(human_y0)))
             boxes_target["obj_area"].append((float(obj_x1) - float(obj_x0)) * (float(obj_y1) - float(obj_y0)))
