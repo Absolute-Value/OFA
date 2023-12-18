@@ -18,13 +18,13 @@ export MASTER_PORT=8514
 # The rank of this worker, should be in {0, ..., WORKER_CNT-1}, for single-worker training, please set to 0
 export RANK=0 
 
-data_dir=/local/hico-det
-data=${data_dir}/hico-det_train.tsv,${data_dir}/hico-det_val.tsv
+data_dir=/local/vcoco
+data=${data_dir}/train_ofa.tsv,${data_dir}/val_ofa.tsv
 restore_file=../../checkpoints/ofa_medium.pt
 selected_cols=0
 
-log_dir=./hoi_logs/medium/
-save_dir=./hoi_checkpoints/medium/
+log_dir=./hoi_logs/vcoco/medium/
+save_dir=./hoi_checkpoints/vcoco/medium/
 mkdir -p $log_dir $save_dir
 
 bpe_dir=../../utils/BPE
@@ -44,8 +44,6 @@ attention_dropout=0.0
 max_src_length=100
 max_tgt_length=30
 num_bins=1000
-max_hoi_num=48
-echo "max_hoi_num "${max_hoi_num}
 
 for max_epoch in 30; do
   echo "max_epoch "${max_epoch}
@@ -56,8 +54,8 @@ for max_epoch in 30; do
       for patch_image_size in {512,}; do
         echo "patch_image_size "${patch_image_size}
 
-        log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_hoi"${max_hoi_num}"_rank"${RANK}".log"
-        save_path=${save_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_hoi"${max_hoi_num}
+        log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_rank"${RANK}".log"
+        save_path=${save_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}
         mkdir -p $save_path
 
         python -m torch.distributed.launch --nproc_per_node=${GPUS_PER_NODE} --nnodes=${WORKER_CNT} --node_rank=${RANK} --master_addr=${MASTER_ADDR} --master_port=${MASTER_PORT} ../../train.py \
@@ -113,7 +111,7 @@ for max_epoch in 30; do
           --patch-image-size=${patch_image_size} \
           --fp16 \
           --fp16-scale-window=512 \
-          --max-hoi-num=${max_hoi_num} \
+          --is-multi-label \
           --num-workers=0> ${log_file} 2>&1
       done
     done
