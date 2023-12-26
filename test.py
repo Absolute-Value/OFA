@@ -2,6 +2,8 @@ import os
 import numpy as np
 import torch
 import argparse
+from sklearn.metrics import f1_score
+from sklearn.preprocessing import MultiLabelBinarizer
 from torchvision import transforms
 from fairseq import checkpoint_utils, options, tasks, utils
 from fairseq.dataclass.utils import convert_namespace_to_omegaconf
@@ -215,17 +217,31 @@ def HOI(img_number=0, save_dir=False, is_print=True):
     
     return ori_image_path, instruction, hoi_ids, tokens
 
+def string_to_int(s):
+    return list(map(int, s.split()))
+
 result = []
+trues = []
+preds = []
 write_str = 'img_path\tsrc\tans\tpred\n'
 for i in range(len(lineid_to_offset)):
     img_path, src, ans, pred = HOI(i, is_print=False)
     result.append(ans==pred)
+    trues.append(string_to_int(ans))
+    preds.append(string_to_int(pred))
     write_str += f'{img_path}\t{src}\t{ans}\t{pred}\n'
+# MultiLabelBinarizerのインスタンスを作成
+mlb = MultiLabelBinarizer()
+trues_binarized = mlb.fit_transform(trues)
+preds_binarized = mlb.transform(preds)
+micro_f1 = f1_score(trues_binarized, preds_binarized, average='micro')
+macro_f1 = f1_score(trues_binarized, preds_binarized, average='macro')
 output_dir = f'results/{dataset_name}/{model_size}/'
 os.makedirs(output_dir, exist_ok=True)
 with open(os.path.join(output_dir, f'{img_size}_results.tsv'), 'w') as f:
     f.write(write_str)
 acc = sum(result)/len(result)*100
 with open(os.path.join(output_dir, f'{img_size}_result.txt'), 'w') as f:
-    f.write(f'Total pram:{total_params}\nTrain pram:{trainable_params}\nAcc full:{acc}\nAcc:{round(acc, 2)}')
+    f.write(f'Total pram:{total_params}\nTrain pram:{trainable_params}\nAcc full:{acc}\nAcc:{round(acc, 2)}\Micro F1:{micro_f1}\nMacro F1:{macro_f1}')
 print(img_size, model_size, acc)
+print(f'Micro F1:{micro_f1}\nMacro F1:{macro_f1}')
