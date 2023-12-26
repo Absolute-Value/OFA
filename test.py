@@ -234,14 +234,14 @@ for i in range(len(lineid_to_offset)):
 mlb = MultiLabelBinarizer()
 trues_binarized = mlb.fit_transform(trues)
 preds_binarized = mlb.transform(preds)
-micro_f1 = f1_score(trues_binarized, preds_binarized, average='micro')
-macro_f1 = f1_score(trues_binarized, preds_binarized, average='macro')
+micro_f1 = f1_score(trues_binarized, preds_binarized, average='micro')*100
+macro_f1 = f1_score(trues_binarized, preds_binarized, average='macro')*100
 output_dir = f'results/{dataset_name}/{model_size}/'
 os.makedirs(output_dir, exist_ok=True)
 with open(os.path.join(output_dir, f'{img_size}_results.tsv'), 'w') as f:
     f.write(write_str)
 acc = sum(result)/len(result)*100
 with open(os.path.join(output_dir, f'{img_size}_result.txt'), 'w') as f:
-    f.write(f'Total pram:{total_params}\nTrain pram:{trainable_params}\nAcc full:{acc}\nAcc:{round(acc, 2)}\Micro F1:{micro_f1}\nMacro F1:{macro_f1}')
-print(img_size, model_size, acc)
-print(f'Micro F1:{micro_f1}\nMacro F1:{macro_f1}')
+    f.write(f'Total pram:{total_params}\nTrain pram:{trainable_params}\nAcc:{round(acc, 2)} ({acc})\nMicro F1:{round(micro_f1, 2)} ({micro_f1})\nMacro F1:{round(macro_f1, 2)} ({macro_f1})')
+print(dataset_name, model_size, img_size, round(acc, 2))
+print(f'Micro F1:{round(micro_f1, 2)}\nMacro F1:{round(macro_f1, 2)}')
