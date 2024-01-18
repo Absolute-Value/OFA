@@ -54,8 +54,6 @@ class Dataset:
             img_id, img_name, anns = line.rstrip('\n').split("\t")
             for ann in anns.split("&&"):
                 self.data.append([img_id, img_name, ann])
-                if "hico" in file_path:
-                    break
         self.total_row_count = len(self.data)
     
     def __len__(self):
