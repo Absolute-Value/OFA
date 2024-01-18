@@ -18,13 +18,13 @@ export MASTER_PORT=8514
 # The rank of this worker, should be in {0, ..., WORKER_CNT-1}, for single-worker training, please set to 0
 export RANK=0 
 
-data_dir=/local/vcoco
+data_dir=/local/hico
 data=${data_dir}/train_ofa.tsv,${data_dir}/val_ofa.tsv
 restore_file=../../checkpoints/ofa_medium.pt
 selected_cols=0
 
-log_dir=./hoi_logs/vcoco/medium/
-save_dir=./hoi_checkpoints/vcoco/medium/
+log_dir=./hoi_logs/hico/medium/
+save_dir=./hoi_checkpoints/hico/medium/
 mkdir -p $log_dir $save_dir
 
 bpe_dir=../../utils/BPE
@@ -34,6 +34,8 @@ task=hoi_task
 arch=ofa_medium
 criterion=adjust_label_smoothed_cross_entropy
 label_smoothing=0.1
+batch_size=24
+update_freq=2
 resnet_drop_path_rate=0.0
 encoder_drop_path_rate=0.2
 decoder_drop_path_rate=0.2
@@ -42,24 +44,18 @@ attention_dropout=0.0
 max_src_length=100
 max_tgt_length=30
 num_bins=1000
-# batch_size=(128 48 24 16)
-# update_freq=(1 1 2 2)
-# patch_image_size=(256 384 480 512)
-batch_size=(128)
-update_freq=(1)
-patch_image_size=(256)
 
 for max_epoch in 30; do
   echo "max_epoch "${max_epoch}
   for warmup_updates in {1000,}; do
+    echo "warmup_updates "${warmup_updates} 
     for lr in {5e-5,}; do
-      for ix in ${!batch_size[@]}; do
-        echo "batch_size "${batch_size[ix]}
-        echo "update_freq "${update_freq[ix]}
-        echo "patch_image_size "${patch_image_size[ix]}
+      echo "lr "${lr}
+      for patch_image_size in {480,}; do
+        echo "patch_image_size "${patch_image_size}
 
-        log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size[ix]}"_rank"${RANK}".log"
-        save_path=${save_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size[ix]}
+        log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_rank"${RANK}".log"
+        save_path=${save_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}
         mkdir -p $save_path
 
         python -m torch.distributed.launch --nproc_per_node=${GPUS_PER_NODE} --nnodes=${WORKER_CNT} --node_rank=${RANK} --master_addr=${MASTER_ADDR} --master_port=${MASTER_PORT} ../../train.py \
@@ -73,8 +69,8 @@ for max_epoch in 30; do
           --arch=${arch} \
           --criterion=${criterion} \
           --label-smoothing=${label_smoothing} \
-          --batch-size=${batch_size[ix]} \
-          --update-freq=${update_freq[ix]} \
+          --batch-size=${batch_size} \
+          --update-freq=${update_freq} \
           --encoder-normalize-before \
           --decoder-normalize-before \
           --share-decoder-input-output-embed \
@@ -112,10 +108,9 @@ for max_epoch in 30; do
           --scale-heads \
           --disable-entangle \
           --num-bins=${num_bins} \
-          --patch-image-size=${patch_image_size[ix]} \
+          --patch-image-size=${patch_image_size} \
           --fp16 \
           --fp16-scale-window=512 \
-          --is-multi-label \
           --num-workers=0> ${log_file} 2>&1
       done
     done
