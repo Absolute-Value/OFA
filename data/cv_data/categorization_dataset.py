@@ -99,7 +99,10 @@ class CategorizationDataset(OFADataset):
         is_multi_label=False,
     ):
         super().__init__(split, dataset, bpe, src_dict, tgt_dict)
-        self.split = split
+        if split == 'valid':
+            self.split = 'validation'
+        else:
+            self.split = split
         self.max_src_length = max_src_length
         self.max_tgt_length = max_tgt_length
         self.patch_image_size = patch_image_size
