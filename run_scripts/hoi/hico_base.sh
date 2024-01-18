@@ -34,8 +34,8 @@ task=hoi_task
 arch=ofa_base
 criterion=adjust_label_smoothed_cross_entropy
 label_smoothing=0.1
-batch_size=32
-update_freq=1
+batch_size=12
+update_freq=3
 resnet_drop_path_rate=0.0
 encoder_drop_path_rate=0.2
 decoder_drop_path_rate=0.2
@@ -51,7 +51,7 @@ for max_epoch in 30; do
     echo "warmup_updates "${warmup_updates} 
     for lr in {5e-5,}; do
       echo "lr "${lr}
-      for patch_image_size in {512,}; do
+      for patch_image_size in {480,}; do
         echo "patch_image_size "${patch_image_size}
 
         log_file=${log_dir}/${max_epoch}"_"${warmup_updates}"_"${lr}"_"${patch_image_size}"_rank"${RANK}".log"
