@@ -22,7 +22,7 @@ use_fp16 = True
 parser = argparse.ArgumentParser()
 parser.add_argument('--img_size', type=int, default=256)
 parser.add_argument('--model_size', type=str, default='tiny')
-parser.add_argument('--dataset_name', type=str, default='hico')
+parser.add_argument('--dataset_name', type=str, default='deepfashion', choices=['deepfashion', 'vcoco', 'hico'])
 args = parser.parse_args()
 img_size = args.img_size
 model_size = args.model_size
@@ -31,7 +31,11 @@ dataset_name = args.dataset_name
 # specify some options for evaluation
 parser = options.get_generation_parser()
 # input_args = ["", "--task=refcoco", "--beam=10", "--path=checkpoints/ofa_large.pt", "--bpe-dir=utils/BPE", "--no-repeat-ngram-size=3", "--patch-image-size=384"]
-input_args = ["", "--task=hoi_task", "--beam=10", f"--path=run_scripts/hoi/hoi_checkpoints/{dataset_name}/{model_size}/30_1000_5e-5_{img_size}/checkpoint_best.pt", "--bpe-dir=utils/BPE", "--no-repeat-ngram-size=3", f"--patch-image-size={img_size}"]
+if dataset_name == 'deepfashion':
+    input_args = ["", "--task=categorization", "--beam=10", f"--path=run_scripts/deepfashion/checkpoints/cat/{model_size}/30_1000_5e-5_{img_size}/checkpoint_best.pt", "--bpe-dir=utils/BPE", "--no-repeat-ngram-size=3", f"--patch-image-size={img_size}"]
+else:
+    input_args = ["", "--task=hoi_task", "--beam=10", f"--path=run_scripts/hoi/hoi_checkpoints/{dataset_name}/{model_size}/30_1000_5e-5_{img_size}/checkpoint_best.pt", "--bpe-dir=utils/BPE", "--no-repeat-ngram-size=3", f"--patch-image-size={img_size}"]
+
 args = options.parse_args_and_arch(parser, input_args)
 cfg = convert_namespace_to_omegaconf(args)
 
@@ -173,17 +177,20 @@ def apply_half(t): # Function to turn FP32 to FP16
     return t
 
 offset = 0
-file_dir = f'/local/{dataset_name}/'
-fp = open(os.path.join(file_dir, 'test_ofa.tsv'), "r")
+
+if dataset_name == 'deepfashion':
+    file_dir = f'/local/DeepFashion2/'
+    file_path = os.path.join(file_dir, f'ofa/validation_cat_all.tsv')
+else:
+    file_dir = f'/local/{dataset_name}/'
+    file_path = os.path.join(file_dir, '/test_ofa.tsv')
+fp = open(file_path, "r")
 lineid_to_offset = []
 for line in fp:
     lineid_to_offset.append(offset)
     offset += len(line.encode('utf-8'))
 
-with open(f'/data01/{dataset_name}/hoi_classes.txt', 'r') as f:
-    hoi_classes = f.read().splitlines()
-
-def HOI(img_number=0, save_dir=False, is_print=True):
+def HOI(img_number=0):
     fp.seek(lineid_to_offset[img_number])
     image_id, ori_image_path, label = fp.readline().rstrip("\n").split("\t")
     image_path = os.path.join(file_dir, ori_image_path)
@@ -217,6 +224,35 @@ def HOI(img_number=0, save_dir=False, is_print=True):
     
     return ori_image_path, instruction, hoi_ids, tokens
 
+def Cat(img_number=0):
+    fp.seek(lineid_to_offset[img_number])
+    image_id, image_path, label = fp.readline().rstrip("\n").split("\t")
+    image_path = os.path.join(file_dir, "validation", image_path)
+    image = Image.open(image_path).convert("RGB")
+    w, h = image.size
+
+    boxes_target = {"obj_boxes": [], "obj_ids": [], "objs": [], "size": torch.tensor([h, w])}
+    label_list = label.strip().split('&&')
+    for label in label_list:
+        obj_x0, obj_y0, obj_x1, obj_y1, obj_id, obj = label.strip().split(',')
+        boxes_target["obj_boxes"].append([float(obj_x0), float(obj_y0), float(obj_x1), float(obj_y1)])
+        boxes_target["obj_ids"].append(obj_id)
+        boxes_target["objs"].append(obj)
+
+    instruction = f" ".join(["<bin_{}>".format(int(pos)) for pos in boxes_target["obj_boxes"][0][:4]])
+    sample = construct_sample(image, instruction)
+    sample = utils.move_to_cuda(sample) if use_cuda else sample
+    sample = utils.apply_to_sample(apply_half, sample) if use_fp16 else sample
+
+    # Generate result
+    with torch.no_grad():
+        hypos = task.inference_step(generator, models, sample)
+        # print(hypos[0][0]["tokens"])
+        tokens, bins, imgs = decode_fn(hypos[0][0]["tokens"], task.tgt_dict, task.bpe, generator)
+
+    return image_path, instruction, obj_id, tokens
+
+
 def string_to_int(s):
     tmp = []
     for num in s.split():
@@ -231,7 +267,10 @@ trues = []
 preds = []
 write_str = 'img_path\tsrc\tans\tpred\n'
 for i in range(len(lineid_to_offset)):
-    img_path, src, ans, pred = HOI(i, is_print=False)
+    if dataset_name == 'deepfashion':
+        img_path, src, ans, pred = Cat(i)
+    else:
+        img_path, src, ans, pred = HOI(i)
     result.append(ans==pred)
     trues.append(string_to_int(ans))
     preds.append(string_to_int(pred))

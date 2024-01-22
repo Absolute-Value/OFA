@@ -1,6 +1,6 @@
-for dataset in hico vcoco; do
-    for model in tiny medium base large huge; do
-        for size in 256 384 480 512; do
+for dataset in deepfashion; do
+    for model in tiny medium large huge; do # tiny large huge
+        for size in 256; do #  384 480 512
             python test.py --dataset_name $dataset --img_size $size --model_size $model
         done
     done
