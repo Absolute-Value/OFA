@@ -218,7 +218,13 @@ def HOI(img_number=0, save_dir=False, is_print=True):
     return ori_image_path, instruction, hoi_ids, tokens
 
 def string_to_int(s):
-    return list(map(int, s.split()))
+    tmp = []
+    for num in s.split():
+        try:
+            tmp.append(int(num))
+        except:
+            tmp.append(999)
+    return tmp
 
 result = []
 trues = []
