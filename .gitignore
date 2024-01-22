@@ -7,6 +7,7 @@ imagenet_1k_val/
 test_imgs/
 core
 *_logs/
-logs/
+logs*/
 *_checkpoints/
+checkpoints*/
 results/
