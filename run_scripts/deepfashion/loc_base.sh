@@ -19,8 +19,8 @@ export MASTER_PORT=8514
 export RANK=0 
 
 
-data_dir=/local/DeepFashion2
-data=${data_dir}/train_ofa.tsv,${data_dir}/validation_ofa.tsv
+data_dir=/local/DeepFashion2/ofa/
+data=${data_dir}/train_loc_all.tsv,${data_dir}/validation_loc_all.tsv
 restore_file=../../checkpoints/ofa_base.pt
 selected_cols=0
 
@@ -43,9 +43,12 @@ attention_dropout=0.0
 max_src_length=100
 max_tgt_length=30
 num_bins=1000
-batch_size=(64 32 12 8)
-update_freq=(1 1 3 4)
-patch_image_size=(256 384 480 512)
+# batch_size=(64 32 12 8)
+# update_freq=(1 1 3 4)
+# patch_image_size=(256 384 480 512)
+batch_size=(64 8)
+update_freq=(1 4)
+patch_image_size=(256 512)
 
 for max_epoch in 30; do
   echo "max_epoch "${max_epoch}
