@@ -125,7 +125,7 @@ class LocalizationDataset(OFADataset):
         ])
 
     def __getitem__(self, index):
-        image_id, image_path, label = self.dataset[index]
+        image_id, image_path, obj, label = self.dataset[index]
         
         image_path = os.path.join(self.dataset.root_dir, self.split, image_path)
         image = Image.open(image_path).convert("RGB")
@@ -133,25 +133,21 @@ class LocalizationDataset(OFADataset):
         boxes_target = {"obj_boxes": [], "obj_ids": [], "objs": [], "size": torch.tensor([h, w])}
         label_list = label.strip().split('&&')
         for label in label_list:
-            obj_x0, obj_y0, obj_x1, obj_y1, obj_id, obj = label.strip().split(',')
+            obj_x0, obj_y0, obj_x1, obj_y1 = label.strip().split(',')
             boxes_target["obj_boxes"].append([float(obj_x0), float(obj_y0), float(obj_x1), float(obj_y1)])
-            boxes_target["obj_ids"].append(obj_id)
-            boxes_target["objs"].append(obj)
         boxes_target["obj_boxes"] = torch.tensor(boxes_target["obj_boxes"])
-        boxes_target["obj_ids"] = np.array(boxes_target["obj_ids"])
-        boxes_target["objs"] = np.array(boxes_target["objs"])
 
         patch_image, patch_boxes = self.detection_transform(image, boxes_target)
         resize_h, resize_w = patch_boxes["size"][0], patch_boxes["size"][1]
         patch_mask = torch.tensor([True])
 
-        for obj_name, obj_box in zip(boxes_target["objs"], patch_boxes["obj_boxes"]):
-            src_text = f' which region does the text " {obj_name} " describe?'
-            quant_boxes = []
+        quant_boxes = []
+        src_text = f' which region does the text " {obj} " describe?'
+        for obj_box in patch_boxes["obj_boxes"]:
             quant_boxes.extend(["<bin_{}>".format(int((pos * (self.num_bins - 1)).round())) for pos in obj_box[:4]])
-            break
+            quant_boxes.append(',')
         src_item = self.encode_text(src_text)
-        tgt_item = self.encode_text(' '.join(quant_boxes), use_bpe=False)
+        tgt_item = self.encode_text(' '.join(quant_boxes[:-1]), use_bpe=False)
 
         src_item = torch.cat([self.bos_item, src_item, self.eos_item])
         target_item = torch.cat([tgt_item, self.eos_item])

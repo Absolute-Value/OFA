@@ -46,14 +46,14 @@ class LocalizationTask(OFATask):
 
 class Dataset:
     def __init__(self, file_path):
-        self.root_dir = os.path.dirname(file_path)
+        self.root_dir = os.path.dirname(file_path.replace("ofa/", ""))
         with open(file_path) as f:
             lines = f.readlines()
         self.data = []
         for line in lines:
-            img_id, img_name, anns = line.rstrip('\n').split("\t")
+            img_id, img_name, obj, anns = line.rstrip('\n').split("\t")
             for ann in anns.split("&&"):
-                self.data.append([img_id, img_name, ann])
+                self.data.append([img_id, img_name, obj, ann])
         self.total_row_count = len(self.data)
     
     def __len__(self):
