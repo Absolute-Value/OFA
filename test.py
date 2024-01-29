@@ -22,7 +22,7 @@ use_fp16 = True
 parser = argparse.ArgumentParser()
 parser.add_argument('--img_size', type=int, default=256)
 parser.add_argument('--model_size', type=str, default='tiny')
-parser.add_argument('--dataset_name', type=str, default='deepfashion', choices=['deepfashion', 'vcoco', 'hico'])
+parser.add_argument('--dataset_name', type=str, default='deepfashion', choices=['deepfashion', 'vcoco', 'hico', 'cars'])
 args = parser.parse_args()
 img_size = args.img_size
 model_size = args.model_size
@@ -33,6 +33,8 @@ parser = options.get_generation_parser()
 # input_args = ["", "--task=refcoco", "--beam=10", "--path=checkpoints/ofa_large.pt", "--bpe-dir=utils/BPE", "--no-repeat-ngram-size=3", "--patch-image-size=384"]
 if dataset_name == 'deepfashion':
     input_args = ["", "--task=categorization", "--beam=10", f"--path=run_scripts/deepfashion/checkpoints/cat/{model_size}/30_1000_5e-5_{img_size}/checkpoint_best.pt", "--bpe-dir=utils/BPE", "--no-repeat-ngram-size=3", f"--patch-image-size={img_size}"]
+elif dataset_name == 'cars':
+    input_args = ["", "--task=cars", "--beam=10", f"--path=run_scripts/cars/checkpoints/{model_size}/30_1000_5e-5_{img_size}/checkpoint_best.pt", "--bpe-dir=utils/BPE", "--no-repeat-ngram-size=3", f"--patch-image-size={img_size}"]
 else:
     input_args = ["", "--task=hoi_task", "--beam=10", f"--path=run_scripts/hoi/hoi_checkpoints/{dataset_name}/{model_size}/30_1000_5e-5_{img_size}/checkpoint_best.pt", "--bpe-dir=utils/BPE", "--no-repeat-ngram-size=3", f"--patch-image-size={img_size}"]
 
@@ -181,6 +183,9 @@ offset = 0
 if dataset_name == 'deepfashion':
     file_dir = f'/local/DeepFashion2/'
     file_path = os.path.join(file_dir, f'ofa/validation_cat_all.tsv')
+elif dataset_name == 'cars':
+    file_dir = f'/local/Stanford_Cars/'
+    file_path = os.path.join(file_dir, f'test_data_512.tsv')
 else:
     file_dir = f'/local/{dataset_name}/'
     file_path = os.path.join(file_dir, '/test_ofa.tsv')
@@ -252,6 +257,30 @@ def Cat(img_number=0):
 
     return image_path, instruction, obj_id, tokens
 
+def Cars(img_number=0):
+    fp.seek(lineid_to_offset[img_number])
+    image_name, label_id, _, loc = fp.readline().rstrip("\n").split("\t")
+    locs = [float(l) for l in loc.split("&&")]
+    image_path = os.path.join(file_dir, "test_img_512", image_name)
+    image = Image.open(image_path).convert("RGB")
+    w, h = image.size
+
+    boxes_target = {"obj_boxes": [], "size": torch.tensor([h, w])}
+    boxes_target["obj_boxes"].append(locs)
+    boxes_target["obj_boxes"] = torch.tensor(boxes_target["obj_boxes"])
+
+    instruction = f" ".join(["<bin_{}>".format(int(pos)) for pos in boxes_target["obj_boxes"][0][:4]])
+    sample = construct_sample(image, instruction)
+    sample = utils.move_to_cuda(sample) if use_cuda else sample
+    sample = utils.apply_to_sample(apply_half, sample) if use_fp16 else sample
+
+    # Generate result
+    with torch.no_grad():
+        hypos = task.inference_step(generator, models, sample)
+        # print(hypos[0][0]["tokens"])
+        tokens, bins, imgs = decode_fn(hypos[0][0]["tokens"], task.tgt_dict, task.bpe, generator)
+
+    return image_path, instruction, label_id, tokens
 
 def string_to_int(s):
     tmp = []
@@ -269,6 +298,10 @@ write_str = 'img_path\tsrc\tans\tpred\n'
 for i in range(len(lineid_to_offset)):
     if dataset_name == 'deepfashion':
         img_path, src, ans, pred = Cat(i)
+    elif dataset_name == 'cars':
+        if i == 0:
+            continue
+        img_path, src, ans, pred = Cars(i)
     else:
         img_path, src, ans, pred = HOI(i)
     result.append(ans==pred)
