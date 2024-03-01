@@ -2,8 +2,6 @@ import os
 import numpy as np
 import torch
 import argparse
-from sklearn.metrics import f1_score
-from sklearn.preprocessing import MultiLabelBinarizer
 from torchvision import transforms
 from fairseq import checkpoint_utils, options, tasks, utils
 from fairseq.dataclass.utils import convert_namespace_to_omegaconf
@@ -30,7 +28,7 @@ dataset_name = args.dataset_name
 
 # specify some options for evaluation
 parser = options.get_generation_parser()
-# input_args = ["", "--task=refcoco", "--beam=10", "--path=checkpoints/ofa_large.pt", "--bpe-dir=utils/BPE", "--no-repeat-ngram-size=3", "--patch-image-size=384"]
+#input_args = ["", "--task=refcoco", "--beam=10", f"--path=checkpoints/ofa_{model_size}.pt", "--bpe-dir=utils/BPE", "--no-repeat-ngram-size=3", f"--patch-image-size={img_size}"]
 input_args = ["", "--task=localization", "--beam=10", f"--path=run_scripts/deepfashion/checkpoints/loc/{model_size}/30_1000_5e-5_{img_size}/checkpoint_best.pt", "--bpe-dir=utils/BPE", "--no-repeat-ngram-size=3", f"--patch-image-size={img_size}"]
 
 args = options.parse_args_and_arch(parser, input_args)
@@ -121,10 +119,13 @@ def coord2bin(coords, w_resize_ratio, h_resize_ratio):
 def bin2coord(bins, w_resize_ratio, h_resize_ratio):
     bin_list = [int(bin[5:-1]) for bin in bins.strip().split()]
     coord_list = []
-    coord_list += [bin_list[0] / (task.cfg.num_bins - 1) * task.cfg.max_image_size / w_resize_ratio]
-    coord_list += [bin_list[1] / (task.cfg.num_bins - 1) * task.cfg.max_image_size / h_resize_ratio]
-    coord_list += [bin_list[2] / (task.cfg.num_bins - 1) * task.cfg.max_image_size / w_resize_ratio]
-    coord_list += [bin_list[3] / (task.cfg.num_bins - 1) * task.cfg.max_image_size / h_resize_ratio]
+    try:
+        coord_list += [bin_list[0] / (task.cfg.num_bins - 1) * task.cfg.max_image_size / w_resize_ratio]
+        coord_list += [bin_list[1] / (task.cfg.num_bins - 1) * task.cfg.max_image_size / h_resize_ratio]
+        coord_list += [bin_list[2] / (task.cfg.num_bins - 1) * task.cfg.max_image_size / w_resize_ratio]
+        coord_list += [bin_list[3] / (task.cfg.num_bins - 1) * task.cfg.max_image_size / h_resize_ratio]
+    except:
+        return []
     return coord_list
 
 
